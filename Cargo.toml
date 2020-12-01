@@ -1,0 +1,17 @@
+[package]
+name = "advent-2020"
+version = "0.1.0"
+authors = ["Michael Diamond"]
+edition = "2018"
+
+[dependencies]
+lazy_static = "1.4.0"
+regex = "1"
+
+# https://doc.rust-lang.org/1.29.0/book/first-edition/conditional-compilation.html
+# https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
+[features]
+default = []
+# if enabled compiles additional output / debugging details
+# implicitly enabled in non-release mode
+interactive = []
