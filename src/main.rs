@@ -44,6 +44,8 @@ macro_rules! parameterized_test {
 
 #[macro_use] mod console;
 
+mod aoc01;
+
 fn main() {
     let _console = console::Console::init();
     println!(); // split build output from runtime output
@@ -54,6 +56,7 @@ fn main() {
     }
     let day: u32 = args[1].parse().expect("Should be a natural number");
     match day {
+        1 => aoc01::advent(),
         x => {
             eprintln!("Day {} hasn't happened yet.", x);
             ::std::process::exit(1);
