@@ -5,6 +5,7 @@ name = "advent-2020"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
+ "parameterized_test",
  "regex",
 ]
 
@@ -28,6 +29,12 @@ name = "memchr"
 version = "2.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
+
+[[package]]
+name = "parameterized_test"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1fc5322b3eee32612f95d7740ca559b42251f3ba6e29862bbf6f1ea854751df"
 
 [[package]]
 name = "regex"
