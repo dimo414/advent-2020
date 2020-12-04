@@ -77,7 +77,9 @@ mod tests {
 
     #[test]
     fn multiply() {
-
+        let landscape = parse_example();
+        let slopes = vec!(vector(1, 1), vector(3, 1), vector(5, 1), vector(7, 1), vector(1, 2));
+        assert_eq!(landscape.traverse_multi(slopes), vec!(2, 7, 3, 4, 2));
     }
 
     #[test]
