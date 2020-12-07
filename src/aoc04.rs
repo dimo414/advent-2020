@@ -1,5 +1,5 @@
 use regex::Regex;
-use anyhow::{Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use crate::parsing;
 
 pub fn advent() {
@@ -37,25 +37,25 @@ fn valid_values(p: &str) -> Result<()> {
     // TODO annotate all Err results .with_context()
     let birth_year = parsing::capture_group(&parsing::regex_captures(&BYR_RE, p)?, 1).parse::<i32>()
         .with_context(|| p.to_string())?;
-    if birth_year < 1920 || birth_year > 2002 { return Err(parsing::ParsingError::new("byr".into()))?; }
+    ensure!(birth_year >= 1920 && birth_year <= 2002, "byr");
 
     let issue_year = parsing::capture_group(&parsing::regex_captures(&IYR_RE, p)?, 1).parse::<i32>()?;
-    if issue_year < 2010 || issue_year > 2020 { return Err(parsing::ParsingError::new("iyr".into()))?; }
+    ensure!(issue_year >= 2010 && issue_year <= 2020, "iyr");
 
     let expr_year = parsing::capture_group(&parsing::regex_captures(&EYR_RE, p)?, 1).parse::<i32>()?;
-    if expr_year < 2020 || expr_year > 2030 { return Err(parsing::ParsingError::new("eyr".to_string()))?; }
+    ensure!(expr_year >= 2020 && expr_year <= 2030, "eyr");
 
     //parsing::capture_group(parsing::regex_captures(&HGT_CM_RE, p)?, 1);
     let height_cm_capture = parsing::regex_captures(&HGT_CM_RE, p);
     let height_in_capture = parsing::regex_captures(&HGT_IN_RE, p);
     if height_cm_capture.is_ok() {
         let height_cm = parsing::capture_group(&height_cm_capture.unwrap(), 1).parse::<i32>()?;
-        if height_cm < 150 || height_cm > 193 { return Err(parsing::ParsingError::new("hgt".to_string()))?; }
+        ensure!(height_cm >= 150 && height_cm <= 193, "hgt");
     } else if height_in_capture.is_ok() {
         let height_in = parsing::capture_group(&height_in_capture.unwrap(), 1).parse::<i32>()?;
-        if height_in < 59 || height_in > 76 { return Err(parsing::ParsingError::new("hgt".to_string()))?; }
+        ensure!(height_in >= 59 && height_in <= 76, "hgt");
     } else {
-        return Err(parsing::ParsingError::new("hgt".to_string()))?;
+        bail!("hgt");
     }
 
     parsing::regex_captures(&HCL_RE, p)?;
