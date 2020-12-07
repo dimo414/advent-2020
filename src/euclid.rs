@@ -5,7 +5,6 @@ mod point {
     use super::*;
     use std::fmt;
     use std::ops::{Add,AddAssign,Sub};
-    use regex::Regex;
     use std::str::FromStr;
     use anyhow::{Error, Result};
     use crate::parsing;
@@ -100,12 +99,9 @@ mod point {
         type Err = Error;
 
         fn from_str(s: &str) -> Result<Self> {
-            lazy_static! {
-                // r"^([^,]+),([^,]+)$" would be more strict - worth it?
-                static ref RE: Regex = Regex::new(r"^\(?([^(,]+),([^),]+)\)?$").unwrap();
-            }
-
-            let caps = parsing::regex_captures(&RE, s)?;
+            // r"^([^,]+),([^,]+)$" would be more strict - worth it?
+            let regex = static_regex!(r"^\(?([^(,]+),([^),]+)\)?$");
+            let caps = parsing::regex_captures(&regex, s)?;
             let x: i32 = parsing::capture_group(&caps, 1).trim().parse()?;
             let y: i32 = parsing::capture_group(&caps, 2).trim().parse()?;
             return Ok(point(x, y));

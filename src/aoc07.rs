@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet, VecDeque};
-use regex::Regex;
 use crate::parsing;
 use anyhow::{Context, Error, Result};
 use std::str::FromStr;
@@ -53,12 +52,10 @@ impl FromStr for Bag {
     type Err = Error;
 
     fn from_str(entry: &str) -> Result<Self> {
-        lazy_static! {
-            static ref ENTRY_RE: Regex = Regex::new(r"^(.*) bags contain (.*)\.$").unwrap();
-            static ref BAG_RE: Regex = Regex::new(r"^([0-9]+) (.*) bags?$").unwrap();
-        }
+        let entry_re = static_regex!(r"^(.*) bags contain (.*)\.$");
+        let bag_re = static_regex!(r"^([0-9]+) (.*) bags?$");
 
-        let entry_caps = parsing::regex_captures(&ENTRY_RE, entry)?;
+        let entry_caps = parsing::regex_captures(entry_re, entry)?;
         let name = parsing::capture_group(&entry_caps, 1).to_string();
 
         let mut contents_txt = parsing::capture_group(&entry_caps, 2)
@@ -68,7 +65,7 @@ impl FromStr for Bag {
         }
         let mut contents = HashMap::new();
         for contained_bag in contents_txt {
-            let contents_caps = parsing::regex_captures(&BAG_RE, contained_bag)?;
+            let contents_caps = parsing::regex_captures(&bag_re, contained_bag)?;
             let num = parsing::capture_group(&contents_caps, 1)
                 .parse::<u32>().with_context(|| format!("{}", contained_bag))?;
             let dep = parsing::capture_group(&contents_caps, 2);

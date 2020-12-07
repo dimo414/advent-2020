@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::str::FromStr;
 use anyhow::{Context, Error, Result};
 use crate::parsing;
@@ -33,11 +32,8 @@ impl FromStr for Entry {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        lazy_static! {
-            static ref RE: Regex = Regex::new(r"^(\d+)-(\d+) (.): (.*)$").unwrap();
-        }
-
-        let caps = parsing::regex_captures(&RE, s)?;
+        let regex = static_regex!(r"^(\d+)-(\d+) (.): (.*)$");
+        let caps = parsing::regex_captures(&regex, s)?;
         let nums: (i32, i32) = (parsing::capture_group(&caps, 1).parse().with_context(|| s.to_string())?, parsing::capture_group(&caps, 2).parse().with_context(|| s.to_string())?);
         let letter = parsing::capture_group(&caps, 3).chars().next().unwrap();
         let password = parsing::capture_group(&caps, 4).to_string();

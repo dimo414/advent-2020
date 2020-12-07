@@ -1,4 +1,3 @@
-use regex::Regex;
 use anyhow::{bail, ensure, Context, Result};
 use crate::parsing;
 
@@ -23,31 +22,28 @@ fn valid_fields(p: &str) -> bool {
 }
 
 fn valid_values(p: &str) -> Result<()> {
-    lazy_static! {
-        static ref BYR_RE: Regex = Regex::new(r"byr:(\d{4})\b").unwrap();
-        static ref IYR_RE: Regex = Regex::new(r"iyr:(\d{4})\b").unwrap();
-        static ref EYR_RE: Regex = Regex::new(r"eyr:(\d{4})\b").unwrap();
-        static ref HGT_CM_RE: Regex = Regex::new(r"hgt:(\d+)cm\b").unwrap();
-        static ref HGT_IN_RE: Regex = Regex::new(r"hgt:(\d+)in\b").unwrap();
-        static ref HCL_RE: Regex = Regex::new(r"hcl:#([0-9a-f]{6})\b").unwrap();
-        static ref ECL_RE: Regex = Regex::new(r"ecl:(amb|blu|brn|gry|grn|hzl|oth)\b").unwrap();
-        static ref PID_RE: Regex = Regex::new(r"pid:(\d{9})\b").unwrap();
-    }
+    let byr_regex = static_regex!(r"byr:(\d{4})\b");
+    let iyr_regex = static_regex!(r"iyr:(\d{4})\b");
+    let eyr_regex = static_regex!(r"eyr:(\d{4})\b");
+    let hgt_cm_regex = static_regex!(r"hgt:(\d+)cm\b");
+    let hgt_in_regex = static_regex!(r"hgt:(\d+)in\b");
+    let hcl_regex = static_regex!(r"hcl:#([0-9a-f]{6})\b");
+    let ecl_regex = static_regex!(r"ecl:(amb|blu|brn|gry|grn|hzl|oth)\b");
+    let pid_regex = static_regex!(r"pid:(\d{9})\b");
 
     // TODO annotate all Err results .with_context()
-    let birth_year = parsing::capture_group(&parsing::regex_captures(&BYR_RE, p)?, 1).parse::<i32>()
+    let birth_year = parsing::capture_group(&parsing::regex_captures(&byr_regex, p)?, 1).parse::<i32>()
         .with_context(|| p.to_string())?;
     ensure!(birth_year >= 1920 && birth_year <= 2002, "byr");
 
-    let issue_year = parsing::capture_group(&parsing::regex_captures(&IYR_RE, p)?, 1).parse::<i32>()?;
+    let issue_year = parsing::capture_group(&parsing::regex_captures(&iyr_regex, p)?, 1).parse::<i32>()?;
     ensure!(issue_year >= 2010 && issue_year <= 2020, "iyr");
 
-    let expr_year = parsing::capture_group(&parsing::regex_captures(&EYR_RE, p)?, 1).parse::<i32>()?;
+    let expr_year = parsing::capture_group(&parsing::regex_captures(&eyr_regex, p)?, 1).parse::<i32>()?;
     ensure!(expr_year >= 2020 && expr_year <= 2030, "eyr");
 
-    //parsing::capture_group(parsing::regex_captures(&HGT_CM_RE, p)?, 1);
-    let height_cm_capture = parsing::regex_captures(&HGT_CM_RE, p);
-    let height_in_capture = parsing::regex_captures(&HGT_IN_RE, p);
+    let height_cm_capture = parsing::regex_captures(&hgt_cm_regex, p);
+    let height_in_capture = parsing::regex_captures(&hgt_in_regex, p);
     if height_cm_capture.is_ok() {
         let height_cm = parsing::capture_group(&height_cm_capture.unwrap(), 1).parse::<i32>()?;
         ensure!(height_cm >= 150 && height_cm <= 193, "hgt");
@@ -58,9 +54,9 @@ fn valid_values(p: &str) -> Result<()> {
         bail!("hgt");
     }
 
-    parsing::regex_captures(&HCL_RE, p)?;
-    parsing::regex_captures(&ECL_RE, p)?;
-    parsing::regex_captures(&PID_RE, p)?;
+    parsing::regex_captures(&hcl_regex, p)?;
+    parsing::regex_captures(&ecl_regex, p)?;
+    parsing::regex_captures(&pid_regex, p)?;
 
     return Ok(());
 }
