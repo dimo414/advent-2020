@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::error::ParseError;
+use anyhow::{Error, Result};
 use crate::euclid::{Point,Vector,point,vector};
 
 pub fn advent() {
@@ -40,9 +40,9 @@ impl Landscape {
 }
 
 impl FromStr for Landscape {
-    type Err = ParseError;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, ParseError> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut trees = Vec::new();
         for line in s.lines() {
             trees.push(line.chars().map(|c| c == '#').collect());

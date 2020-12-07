@@ -7,7 +7,8 @@ mod point {
     use std::ops::{Add,AddAssign,Sub};
     use regex::Regex;
     use std::str::FromStr;
-    use crate::error::ParseError;
+    use anyhow::{Error, Result};
+    use crate::parsing;
 
     #[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
     pub struct Point {
@@ -96,17 +97,17 @@ mod point {
     }
 
     impl FromStr for Point {
-        type Err = ParseError;
+        type Err = Error;
 
-        fn from_str(s: &str) -> Result<Self, ParseError> {
+        fn from_str(s: &str) -> Result<Self> {
             lazy_static! {
                 // r"^([^,]+),([^,]+)$" would be more strict - worth it?
                 static ref RE: Regex = Regex::new(r"^\(?([^(,]+),([^),]+)\)?$").unwrap();
             }
 
-            let caps = regex_captures!(RE, s)?;
-            let x: i32 = capture_group!(caps, 1).trim().parse()?;
-            let y: i32 = capture_group!(caps, 2).trim().parse()?;
+            let caps = parsing::regex_captures(&RE, s)?;
+            let x: i32 = parsing::capture_group(&caps, 1).trim().parse()?;
+            let y: i32 = parsing::capture_group(&caps, 2).trim().parse()?;
             return Ok(point(x, y));
         }
     }
@@ -129,10 +130,10 @@ mod point {
 
         #[test]
         fn parse() {
-            assert_eq!("3, 4".parse::<Point>(), Ok(point(3, 4)));
-            assert_eq!("-3,-4".parse::<Point>(), Ok(point(-3, -4)));
-            assert_eq!("(40,30)".parse::<Point>(), Ok(point(40, 30)));
-            assert_eq!("(-3, -5)".parse::<Point>(), Ok(point(-3, -5)));
+            assert_eq!("3, 4".parse::<Point>().unwrap(), point(3, 4));
+            assert_eq!("-3,-4".parse::<Point>().unwrap(), point(-3, -4));
+            assert_eq!("(40,30)".parse::<Point>().unwrap(), point(40, 30));
+            assert_eq!("(-3, -5)".parse::<Point>().unwrap(), point(-3, -5));
 
             assert!("abc".parse::<Point>().is_err());
         }
@@ -168,7 +169,7 @@ mod vector {
     use std::fmt;
     use std::str::FromStr;
     use std::ops::Mul;
-    use crate::error::ParseError;
+    use anyhow::{Error, Result};
 
     #[derive(Copy, Clone, PartialEq, Eq, Hash)]
     pub struct Vector {
@@ -204,9 +205,9 @@ mod vector {
     }
 
     impl FromStr for Vector {
-        type Err = ParseError;
+        type Err = Error;
 
-        fn from_str(s: &str) -> Result<Self, ParseError> {
+        fn from_str(s: &str) -> Result<Self> {
             // Just reuse point's parser
             let p: super::Point = s.parse()?;
             Ok(vector(p.x, p.y))
@@ -232,8 +233,8 @@ mod vector {
 
         #[test]
         fn parse() {
-            assert_eq!("3, 4".parse::<Vector>(), Ok(vector(3, 4)));
-            assert_eq!("-3,-4".parse::<Vector>(), Ok(vector(-3, -4)));
+            assert_eq!("3, 4".parse::<Vector>().unwrap(), vector(3, 4));
+            assert_eq!("-3,-4".parse::<Vector>().unwrap(), vector(-3, -4));
         }
 
         #[test]

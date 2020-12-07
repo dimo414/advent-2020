@@ -3,21 +3,12 @@
 #[macro_use] extern crate lazy_static;
 extern crate parameterized_test;
 extern crate regex;
+extern crate anyhow;
 
 use std::env;
 
-macro_rules! regex_captures {
-  ($re:tt, $s:expr) => {
-    $re.captures($s).ok_or_else(|| format!("`{}` did not match `{}`", $s, $re.as_str()))
-  };
-}
-
-macro_rules! capture_group {
-  ($caps:expr, $group:expr) => { $caps.get($group).expect("valid capture group").as_str() };
-}
-
 #[macro_use] mod console;
-mod error;
+#[macro_use] mod parsing;
 mod euclid;
 
 mod aoc01;

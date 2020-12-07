@@ -5,8 +5,9 @@ authors = ["Michael Diamond"]
 edition = "2018"
 
 [dependencies]
-lazy_static = "1.4.0"
-parameterized_test = "0.1.0"
+anyhow = "1.0"
+lazy_static = "1.4"
+parameterized_test = "0.1"
 regex = "1"
 
 # https://doc.rust-lang.org/1.29.0/book/first-edition/conditional-compilation.html

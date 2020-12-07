@@ -1,6 +1,7 @@
 use regex::Regex;
 use std::str::FromStr;
-use crate::error::ParseError;
+use anyhow::{Context, Error, Result};
+use crate::parsing;
 
 pub fn advent() {
     let data = parse_data();
@@ -29,17 +30,17 @@ impl Entry {
 }
 
 impl FromStr for Entry {
-    type Err = ParseError;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, ParseError> {
+    fn from_str(s: &str) -> Result<Self> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"^(\d+)-(\d+) (.): (.*)$").unwrap();
         }
 
-        let caps = regex_captures!(RE, s)?;
-        let nums: (i32, i32) = (capture_group!(caps, 1).parse()?, capture_group!(caps, 2).parse()?);
-        let letter = capture_group!(caps, 3).chars().next().unwrap();
-        let password = capture_group!(caps, 4).to_string();
+        let caps = parsing::regex_captures(&RE, s)?;
+        let nums: (i32, i32) = (parsing::capture_group(&caps, 1).parse().with_context(|| s.to_string())?, parsing::capture_group(&caps, 2).parse().with_context(|| s.to_string())?);
+        let letter = parsing::capture_group(&caps, 3).chars().next().unwrap();
+        let password = parsing::capture_group(&caps, 4).to_string();
         return Ok(Entry{nums, letter, password});
     }
 }

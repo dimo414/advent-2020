@@ -1,5 +1,6 @@
-use crate::error::ParseError;
 use regex::Regex;
+use anyhow::{Context, Result};
+use crate::parsing;
 
 pub fn advent() {
     let passports = parse_data();
@@ -21,7 +22,7 @@ fn valid_fields(p: &str) -> bool {
         p.contains("pid:")
 }
 
-fn valid_values(p: &str) -> Result<(), ParseError> {
+fn valid_values(p: &str) -> Result<()> {
     lazy_static! {
         static ref BYR_RE: Regex = Regex::new(r"byr:(\d{4})\b").unwrap();
         static ref IYR_RE: Regex = Regex::new(r"iyr:(\d{4})\b").unwrap();
@@ -33,31 +34,33 @@ fn valid_values(p: &str) -> Result<(), ParseError> {
         static ref PID_RE: Regex = Regex::new(r"pid:(\d{9})\b").unwrap();
     }
 
-    let birth_year = capture_group!(regex_captures!(BYR_RE, p)?, 1).parse::<i32>()?;
-    if birth_year < 1920 || birth_year > 2002 { return Err(ParseError::Malformed("byr".into())); }
+    // TODO annotate all Err results .with_context()
+    let birth_year = parsing::capture_group(&parsing::regex_captures(&BYR_RE, p)?, 1).parse::<i32>()
+        .with_context(|| p.to_string())?;
+    if birth_year < 1920 || birth_year > 2002 { return Err(parsing::ParsingError::new("byr".into()))?; }
 
-    let issue_year = capture_group!(regex_captures!(IYR_RE, p)?, 1).parse::<i32>()?;
-    if issue_year < 2010 || issue_year > 2020 { return Err(ParseError::Malformed("iyr".into())); }
+    let issue_year = parsing::capture_group(&parsing::regex_captures(&IYR_RE, p)?, 1).parse::<i32>()?;
+    if issue_year < 2010 || issue_year > 2020 { return Err(parsing::ParsingError::new("iyr".into()))?; }
 
-    let expr_year = capture_group!(regex_captures!(EYR_RE, p)?, 1).parse::<i32>()?;
-    if expr_year < 2020 || expr_year > 2030 { return Err(ParseError::Malformed("eyr".to_string())); }
+    let expr_year = parsing::capture_group(&parsing::regex_captures(&EYR_RE, p)?, 1).parse::<i32>()?;
+    if expr_year < 2020 || expr_year > 2030 { return Err(parsing::ParsingError::new("eyr".to_string()))?; }
 
-    //capture_group!(regex_captures!(HGT_CM_RE, p)?, 1);
-    let height_cm_capture = regex_captures!(HGT_CM_RE, p);
-    let height_in_capture = regex_captures!(HGT_IN_RE, p);
+    //parsing::capture_group(parsing::regex_captures(&HGT_CM_RE, p)?, 1);
+    let height_cm_capture = parsing::regex_captures(&HGT_CM_RE, p);
+    let height_in_capture = parsing::regex_captures(&HGT_IN_RE, p);
     if height_cm_capture.is_ok() {
-        let height_cm = capture_group!(height_cm_capture.unwrap(), 1).parse::<i32>()?;
-        if height_cm < 150 || height_cm > 193 { return Err(ParseError::Malformed("hgt".to_string())); }
+        let height_cm = parsing::capture_group(&height_cm_capture.unwrap(), 1).parse::<i32>()?;
+        if height_cm < 150 || height_cm > 193 { return Err(parsing::ParsingError::new("hgt".to_string()))?; }
     } else if height_in_capture.is_ok() {
-        let height_in = capture_group!(height_in_capture.unwrap(), 1).parse::<i32>()?;
-        if height_in < 59 || height_in > 76 { return Err(ParseError::Malformed("hgt".to_string())); }
+        let height_in = parsing::capture_group(&height_in_capture.unwrap(), 1).parse::<i32>()?;
+        if height_in < 59 || height_in > 76 { return Err(parsing::ParsingError::new("hgt".to_string()))?; }
     } else {
-        return Err(ParseError::Malformed("hgt".to_string()));
+        return Err(parsing::ParsingError::new("hgt".to_string()))?;
     }
 
-    regex_captures!(HCL_RE, p)?;
-    regex_captures!(ECL_RE, p)?;
-    regex_captures!(PID_RE, p)?;
+    parsing::regex_captures(&HCL_RE, p)?;
+    parsing::regex_captures(&ECL_RE, p)?;
+    parsing::regex_captures(&PID_RE, p)?;
 
     return Ok(());
 }
@@ -76,15 +79,15 @@ mod tests {
       missing_byr: ("hcl:#cfa07d eyr:2025 pid:166559648\niyr:2011 ecl:brn hgt:59in", false),
     }
 
-    parameterized_test::create!{invalid, (passport, err), {
-      assert_eq!(valid_values(passport), Err(err));
+    parameterized_test::create!{invalid, passport, {
+      // TODO assert on the exact error
+      assert!(valid_values(passport).is_err());
     }}
     invalid!{
-      a: ("eyr:1972 cid:100\nhcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926", ParseError::Malformed("eyr".into())),
-      b: ("iyr:2019\nhcl:#602927 eyr:1967 hgt:170cm\necl:grn pid:012533040 byr:1946", ParseError::Malformed("eyr".into())),
-      c: ("hcl:dab227 iyr:2012\necl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277",
-          ParseError::Malformed("`hcl:dab227 iyr:2012\necl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277` did not match `hcl:#([0-9a-f]{6})\\b`".into())),
-      d: ("hgt:59cm ecl:zzz\neyr:2038 hcl:74454a iyr:2023\npid:3556412378 byr:2007", ParseError::Malformed("byr".into())),
+      a: "eyr:1972 cid:100\nhcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926",
+      b: "iyr:2019\nhcl:#602927 eyr:1967 hgt:170cm\necl:grn pid:012533040 byr:1946",
+      c: "hcl:dab227 iyr:2012\necl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277",
+      d: "hgt:59cm ecl:zzz\neyr:2038 hcl:74454a iyr:2023\npid:3556412378 byr:2007",
     }
 
     parameterized_test::create!{valid, passport, {
