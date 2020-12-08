@@ -10,6 +10,7 @@ use std::env;
 #[macro_use] mod console;
 #[macro_use] mod parsing;
 mod euclid;
+mod machine;
 
 mod aoc01;
 mod aoc02;
@@ -18,6 +19,7 @@ mod aoc04;
 mod aoc05;
 mod aoc06;
 mod aoc07;
+mod aoc08;
 
 fn main() {
     let _console = console::Console::init();
@@ -36,6 +38,7 @@ fn main() {
         5 => aoc05::advent(),
         6 => aoc06::advent(),
         7 => aoc07::advent(),
+        8 => aoc08::advent(),
         x => {
             eprintln!("Day {} hasn't happened yet.", x);
             ::std::process::exit(1);
