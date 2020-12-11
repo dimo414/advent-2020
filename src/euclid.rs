@@ -83,6 +83,12 @@ mod point {
         }
     }
 
+    impl AddAssign<&Vector> for Point {
+        fn add_assign(&mut self, vec: &Vector) {
+            *self = point(self.x + vec.x, self.y + vec.y);
+        }
+    }
+
     impl Sub for Point {
         type Output = Vector;
 
@@ -179,6 +185,13 @@ mod vector {
     }
 
     impl Vector {
+        // https://en.wikipedia.org/wiki/Points_of_the_compass
+        pub const CARDINAL: &'static [Vector] = &[
+            vector(-1, 0), vector(0, -1), vector(1, 0), vector(0, 1)];
+        pub const ORDINAL: &'static [Vector] = &[
+            vector(-1, 0), vector(-1, -1), vector(0, -1), vector(1, -1),
+            vector(1, 0), vector(1, 1), vector(0, 1), vector(-1, 1)];
+
         pub fn abs(&self) -> Vector {
             vector(self.x.abs(), self.y.abs())
         }
