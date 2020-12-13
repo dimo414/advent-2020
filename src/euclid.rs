@@ -38,6 +38,14 @@ mod point {
             )
         }
 
+        pub fn display_order_box(points: impl IntoIterator<Item = Point>) -> Option<impl Iterator<Item = Point>> {
+            if let Some((min, max)) = Point::bounding_box(points) {
+                return Some((min.y..max.y + 1)
+                    .flat_map(move |y| (min.x..max.x + 1).map(move |x| point(x, y))));
+            }
+            None
+        }
+
         pub fn in_bounds(&self, min: Point, max: Point) -> bool {
             assert!(min.x <= max.x);
             assert!(min.y <= max.y);
@@ -144,6 +152,18 @@ mod point {
         fn bounding() {
             let points = vec!(point(1, 2), point(2, 3), point(0, 5));
             assert_eq!(Point::bounding_box(points), Some((point(0, 2), point(2, 5))));
+        }
+
+        #[test]
+        fn display_bounds() {
+            let points = vec!(point(1, 2), point(3, 1), point(0, -1));
+            let display_points: Vec<_> = Point::display_order_box(points).unwrap().collect();
+            assert_eq!(display_points, vec!(
+                point(0, -1), point(1, -1), point(2, -1), point(3, -1),
+                point(0, 0), point(1, 0), point(2, 0), point(3, 0),
+                point(0, 1), point(1, 1), point(2, 1), point(3, 1),
+                point(0, 2), point(1, 2), point(2, 2), point(3, 2),
+            ));
         }
 
         #[test]

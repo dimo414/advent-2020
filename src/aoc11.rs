@@ -89,14 +89,10 @@ fn find_stable(floor: &HashMap<Point, State>, strat: &dyn Strategy) -> HashMap<P
 
 fn iteration(floor: &HashMap<Point, State>, strat: &dyn Strategy) -> HashMap<Point, State> {
     let mut next = HashMap::new();
-    let (min, max) = Point::bounding_box(floor.keys().cloned()).unwrap();
-    for y in min.y..max.y+1 {
-        for x in min.x..max.x+1 {
-            let pos = point(x, y);
-            if let Some(s) = floor.get(&pos) {
-                let count = strat.count_nearby(floor, pos);
-                next.insert(pos, strat.next_state(*s, count));
-            }
+    for pos in Point::display_order_box(floor.keys().cloned()).unwrap() {
+        if let Some(s) = floor.get(&pos) {
+            let count = strat.count_nearby(floor, pos);
+            next.insert(pos, strat.next_state(*s, count));
         }
     }
     next
