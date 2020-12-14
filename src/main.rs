@@ -24,6 +24,7 @@ mod aoc09;
 mod aoc10;
 mod aoc11;
 mod aoc12;
+mod aoc13;
 
 fn main() {
     let _console = console::Console::init();
@@ -47,6 +48,7 @@ fn main() {
         10 => aoc10::advent(),
         11 => aoc11::advent(),
         12 => aoc12::advent(),
+        13 => aoc13::advent(),
         x => {
             eprintln!("Day {} hasn't happened yet.", x);
             ::std::process::exit(1);
