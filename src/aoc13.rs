@@ -7,6 +7,8 @@ pub fn advent() {
     println!("Route {} will arrive in {} minutes, value: {}", route, wait_time, route * wait_time);
     println!("Earliest sequential timestamp: {}", find_timestamp(&routes));
 
+    // Intuitive writeup at https://old.reddit.com/r/adventofcode/comments/kcb3bb/2020_day_13_part_2_can_anyone_tell_my_why_this/
+
     // But, lo, WolframAlpha can just solve Part 2 directly...
     // https://www.wolframalpha.com/input/?i=7a%3Dt%2C+13b-1%3Dt%2C+59c-4%3Dt%2C+31d-6%3Dt%2C+19f-7%3Dt
     // https://www.wolframalpha.com/input/?i=37a-0%3Dt%2C+41b-27%3Dt%2C+601c-37%3Dt%2C+19d-49%3Dt%2C+17f-54%3Dt%2C+23g-60%3Dt%2C+29h-66%3Dt%2C+443i-68%3Dt%2C+13j-81%3Dt
