@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 use crate::euclid::{Point,point,vector,Vector};
+use crate::console::{Color, Console};
+use std::fmt;
 
 pub fn advent() {
+    Console::colorize_char('L', Color::BLUE);
+    Console::colorize_char('#', Color::YELLOW);
+    Console::colorize_char('.', Color::GREY);
     let floorplan = parse_data();
     println!("Occupied seats with adjacency: {}",
              count_occupied(&find_stable(&floorplan, &Adjacent{})));
@@ -16,17 +21,43 @@ enum State {
     Floor,
 }
 
+#[derive(Eq, PartialEq, Clone)]
+struct Floor {
+    points: HashMap<Point, State>,
+}
+
+impl fmt::Display for Floor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut out = String::new();
+        let mut last_y = None;
+        for point in Point::display_order_box(self.points.keys().cloned()).unwrap() {
+            if let Some(last_y) = last_y {
+                if point.y != last_y { out.push('\n'); }
+            }
+            last_y = Some(point.y);
+            let c = match self.points.get(&point) {
+                Some(State::Empty) => 'L',
+                Some(State::Occupied) => '#',
+                Some(State::Floor) => '.',
+                None => ' ',
+            };
+            out.push(c);
+        }
+        write!(f, "{}", out)
+    }
+}
+
 trait Strategy {
-    fn count_nearby(&self, floor: &HashMap<Point, State>, pos: Point) -> u32;
+    fn count_nearby(&self, floor: &Floor, pos: Point) -> u32;
     fn next_state(&self, state: State, count: u32) -> State;
 }
 
 struct Adjacent{}
 impl Strategy for Adjacent {
-    fn count_nearby(&self, floor: &HashMap<Point, State>, pos: Point) -> u32 {
+    fn count_nearby(&self, floor: &Floor, pos: Point) -> u32 {
         let mut sum = 0;
         for dir in Vector::ORDINAL {
-            if let Some(s) = floor.get(&(pos+dir)) {
+            if let Some(s) = floor.points.get(&(pos+dir)) {
                 if *s == State::Occupied { sum += 1; }
             }
         }
@@ -45,13 +76,13 @@ impl Strategy for Adjacent {
 
 struct Visible{}
 impl Strategy for Visible {
-    fn count_nearby(&self, floor: &HashMap<Point, State>, pos: Point) -> u32 {
+    fn count_nearby(&self, floor: &Floor, pos: Point) -> u32 {
         let mut sum = 0;
         for dir in Vector::ORDINAL {
             let mut looking = pos;
             loop {
                 looking += dir;
-                if let Some(s) = floor.get(&looking) {
+                if let Some(s) = floor.points.get(&looking) {
                     match s {
                         State::Occupied => { sum += 1; break; },
                         State::Empty => { break; },
@@ -73,34 +104,36 @@ impl Strategy for Visible {
     }
 }
 
-fn count_occupied(floor: &HashMap<Point, State>) -> usize {
-    floor.values().filter(|s| **s==State::Occupied).count()
+fn count_occupied(floor: &Floor) -> usize {
+    floor.points.values().filter(|s| **s==State::Occupied).count()
 }
 
-fn find_stable(floor: &HashMap<Point, State>, strat: &dyn Strategy) -> HashMap<Point, State> {
+fn find_stable(floor: &Floor, strat: &dyn Strategy) -> Floor {
     let mut last = floor.clone();
     loop {
         let next = iteration(&last, strat);
         if next == last { break; }
+        Console::interactive_display(last, std::time::Duration::from_millis(50));
         last = next;
     }
+    Console::clear_interactive();
     last
 }
 
-fn iteration(floor: &HashMap<Point, State>, strat: &dyn Strategy) -> HashMap<Point, State> {
+fn iteration(floor: &Floor, strat: &dyn Strategy) -> Floor {
     let mut next = HashMap::new();
-    for pos in Point::display_order_box(floor.keys().cloned()).unwrap() {
-        if let Some(s) = floor.get(&pos) {
+    for pos in Point::display_order_box(floor.points.keys().cloned()).unwrap() {
+        if let Some(s) = floor.points.get(&pos) {
             let count = strat.count_nearby(floor, pos);
             next.insert(pos, strat.next_state(*s, count));
         }
     }
-    next
+    Floor { points: next }
 }
 
-fn build_map(str: &str) -> HashMap<Point, State> {
+fn build_map(str: &str) -> Floor {
     let rows: Vec<_> = str.trim().split("\n").collect();
-    let mut ret = HashMap::new();
+    let mut points = HashMap::new();
     let mut pos = point(0, 0);
     for row in rows {
         for col in row.chars() {
@@ -110,15 +143,15 @@ fn build_map(str: &str) -> HashMap<Point, State> {
                 '.' => State::Floor,
                 _ => panic!(),
             };
-            ret.insert(pos, state);
+            points.insert(pos, state);
             pos += vector(1, 0);
         }
         pos = point(0, pos.y+1);
     }
-    ret
+    Floor { points }
 }
 
-fn parse_data() -> HashMap<Point, State> {
+fn parse_data() -> Floor {
     build_map(include_str!("../data/day11.txt"))
 }
 
@@ -126,7 +159,7 @@ fn parse_data() -> HashMap<Point, State> {
 mod tests {
     use super::*;
 
-    fn parse_example() -> HashMap<Point, State> {
+    fn parse_example() -> Floor {
         build_map(include_str!("../data/day11_example.txt"))
     }
 
