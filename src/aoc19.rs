@@ -1,21 +1,38 @@
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
-use anyhow::{Error,Result};
+use anyhow::{Error, Result};
 use crate::parsing;
+use regex::Regex;
 
-pub fn advent() {
+pub fn advent(args: &[String]) {
     let (mut rules, expressions) = read_data().unwrap();
+    let regex = elapsed!("Construct regex", rules.to_regex().unwrap());
+
     // This really isn't necessary (it still runs in less than a second) but it shrinks the number
     // of rule elements by ~50% and does appear to improve speeds somewhat.
-    rules.reduce();
+    elapsed!(rules.reduce());
 
-    println!("Initially valid: {}", rules.check_all(&expressions).len());
-
+    println!("Initially valid: {}", elapsed!("Initial", rules.check_all(&expressions).len()));
     rules.make_recursive();
-    println!("With recursive rules: {}", rules.check_all(&expressions).len());
+    println!("With recursive rules: {}", elapsed!("Recursive", rules.check_all(&expressions).len()));
+
+    println!("-----");
+    println!("Initially valid (regex): {}",
+             elapsed!("Initial (regex)", expressions.iter().filter(|e| regex.is_match(e)).count()));
+    // Empirically, 5-deep is sufficient to get the right answer. 8 deep causes Rust to fail after
+    // attempting to allocate ~28GB while evaluating the regex. At 15 it attempts to allocate
+    // ~318GB(!), any deeper and the compiled regex itself exceeds the ~10MB limit.
+    let depth = args.get(0).map(|a| a.parse::<usize>().unwrap()).unwrap_or(5);
+    rules.make_pseduo_recursive(depth);
+    println!("With pseudo-recursive ({}) rules: {}", depth,
+             elapsed!("Pseduo-recursive", rules.check_all(&expressions).len()));
+    let recursive_regex = rules.to_regex().unwrap();
+    println!("With pseudo-recursive ({}) rules (regex): {}", depth,
+             elapsed!("Pseduo-recursive (regex)",
+             expressions.iter().filter(|e| recursive_regex.is_match(e)).count()));
+
 }
 
-// TOOD make this Copy, e.g. by using Literal(Rc<String>)
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Rule {
     Literal(String),
@@ -153,6 +170,37 @@ impl Rules {
     fn make_recursive(&mut self) {
         self.rules.insert(8, "42 | 42 8".parse::<Rule>().unwrap());
         self.rules.insert(11, "42 31 | 42 11 31".parse::<Rule>().unwrap());
+    }
+
+    fn make_pseduo_recursive(&mut self, depth: usize) {
+        let mut parts_8 = Vec::new();
+        let mut parts_11 = Vec::new();
+        for repetitions in 1..=depth {
+            let reps_42 = vec!["42"; repetitions].join(" ");
+            parts_11.push(format!("{} {}", reps_42, vec!["31"; repetitions].join(" ")));
+            parts_8.push(reps_42);
+        }
+        self.rules.insert(8, parts_8.join(" | ").parse::<Rule>().unwrap());
+        self.rules.insert(11, parts_11.join(" | ").parse::<Rule>().unwrap());
+    }
+
+    fn to_regex(&self) -> Result<Regex> {
+        fn regex_id(slf: &Rules, rule_id: u32) -> String {
+            regex(slf, &slf.rules[&rule_id])
+        }
+
+        fn regex(slf: &Rules, rule: &Rule) -> String {
+            match rule {
+                Rule::Literal(pat) => pat.to_string(),
+                Rule::Reference(id) => regex_id(slf, *id),
+                Rule::Sequence(seq) =>
+                    seq.iter().map(|r| regex(slf, r)).collect::<Vec<_>>().join(""),
+                Rule::Disjunction(dis) =>
+                    format!("({})", dis.iter().map(|r| regex(slf, r)).collect::<Vec<_>>().join("|")),
+            }
+        }
+
+        Ok(Regex::new(&format!("^{}$", regex_id(self, 0)))?)
     }
 
     // Checks the text against rule 0

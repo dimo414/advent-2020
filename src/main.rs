@@ -60,7 +60,7 @@ fn main() {
         16 => aoc16::advent(),
         17 => aoc17::advent(),
         18 => aoc18::advent(),
-        19 => aoc19::advent(),
+        19 => aoc19::advent(&args[2..]),
         x => {
             eprintln!("Day {} hasn't happened yet.", x);
             ::std::process::exit(1);

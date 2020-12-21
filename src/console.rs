@@ -4,6 +4,23 @@ macro_rules! interactive {
     };
 }
 
+#[cfg(feature="timing")]
+macro_rules! elapsed {
+    ($expression:expr) => { elapsed!(stringify!($expression), $expression) };
+    ($desc:expr, $expression:expr) => { {
+        println!("\u{001B}[36m[{}...\u{001B}[0m", $desc);
+        let start = std::time::Instant::now();
+        let ret = $expression;
+        println!("\u{001B}[36mElapsed: {:?}]\u{001B}[0m", start.elapsed());
+        ret
+    } };
+}
+#[cfg(not(feature="timing"))]
+macro_rules! elapsed {
+    ($expression:expr) => { $expression };
+    ($desc:expr, $expression:expr) => { $expression };
+}
+
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::HashMap;
 use std::sync::Mutex;
