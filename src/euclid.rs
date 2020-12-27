@@ -20,7 +20,6 @@ mod point {
         Point { x, y }
     }
 
-
     impl Point {
         pub const ORIGIN: Point = point(0, 0);
 
@@ -190,7 +189,7 @@ pub use self::point::{Point,point};
 mod vector {
     use std::fmt;
     use std::str::FromStr;
-    use std::ops::Mul;
+    use std::ops::{Add,Mul};
     use anyhow::{Error, Result};
 
     #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -205,6 +204,8 @@ mod vector {
     }
 
     impl Vector {
+        pub const ZERO: Vector = vector(0, 0);
+
         // https://en.wikipedia.org/wiki/Points_of_the_compass
         pub const CARDINAL: &'static [Vector] = &[
             vector(-1, 0), vector(0, -1), vector(1, 0), vector(0, 1)];
@@ -222,6 +223,14 @@ mod vector {
 
         pub fn grid_len(&self) -> u32 {
             (self.x.abs() + self.y.abs()) as u32
+        }
+    }
+
+    impl Add<Vector> for Vector {
+        type Output = Vector;
+
+        fn add(self, vec: Vector) -> Vector {
+            vector(self.x + vec.x, self.y + vec.y)
         }
     }
 

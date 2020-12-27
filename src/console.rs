@@ -32,15 +32,15 @@ lazy_static! {
 }
 
 pub enum Color {
-    /*BLACK, RED, GREEN, */YELLOW, BLUE, /*MAGENTA, CYAN,*/ GREY,
+    /*BLACK, */RED, GREEN, YELLOW, BLUE, /*MAGENTA, CYAN,*/ GREY,
 }
 
 impl Color {
     fn ansi(&self) -> String {
         let code = match self {
             // Color::BLACK=> 30,
-            // Color::RED=> 31,
-            // Color::GREEN=> 32,
+            Color::RED=> 31,
+            Color::GREEN=> 32,
             Color::YELLOW=> 33,
             Color::BLUE=> 34,
             // Color::MAGENTA=> 35,

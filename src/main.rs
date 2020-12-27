@@ -31,6 +31,7 @@ mod aoc16;
 mod aoc17;
 mod aoc18;
 mod aoc19;
+mod aoc20;
 mod aoc24;
 mod aoc25;
 
@@ -64,6 +65,7 @@ fn main() {
         18 => aoc18::advent(),
         19 => aoc19::advent(&args[2..]),
         24 => aoc24::advent(),
+        20 => aoc20::advent(),
         25 => aoc25::advent(),
         x => {
             eprintln!("Day {} hasn't happened yet.", x);
